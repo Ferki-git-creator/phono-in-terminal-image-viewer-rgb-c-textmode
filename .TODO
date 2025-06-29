@@ -1,5 +1,5 @@
 # 🧑‍💻 UNDER DEVELOPMENT
-- [✓] Repository created 
+- [✓]  created 
 - [20% in ✓] Main.c header added 
 - [x] Terminal output format defined 
 # 🔨 IN PROGRESS 
@@ -9,7 +9,6 @@
 - [x] Add JPEG support 
 - [x] Test on Windows via winpty 
 - [x] Create README.md 
-- [x] ASCII benchmark comparison with 
 - [x] Create logo (ASCII or PNG) 
 # 💡 IDEAS 
 - [x] Add b/w or sepia filter
