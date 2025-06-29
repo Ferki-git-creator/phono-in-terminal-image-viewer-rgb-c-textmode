@@ -1,1 +1,17 @@
-In development
+# 🧑‍💻 UNDER DEVELOPMENT
+- [✓] Repository created 
+- [20% in ✓] Main.c header added 
+- [x] Terminal output format defined 
+# 🔨 IN PROGRESS 
+- [x] PNG processing via stb_image 
+- [x] RGB rendering into " "
+# 🧠 TODO 
+- [x] Add JPEG support 
+- [x] Test on Windows via winpty 
+- [x] Create README.md 
+- [x] ASCII benchmark comparison with cacaview 
+- [x] Create logo (ASCII or PNG) 
+# 💡 IDEAS 
+- [x] Add b/w or sepia filter
+- [x] Experiment with dithering 
+- [x] Add ANSI animation from multiple frames
