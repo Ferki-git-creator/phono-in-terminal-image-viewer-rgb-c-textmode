@@ -1,14 +1,14 @@
 # 🧑‍💻 UNDER DEVELOPMENT
-- [✓]  created 
-- [20% in ✓] Main.c header added 
+- [√]  created 
+- [70% in ✓] Main.c header added 
 - [x] Terminal output format defined 
 # 🔨 IN PROGRESS 
-- [x] PNG processing via stb_image 
-- [x] RGB rendering into " "
+- [√] PNG processing via stb_image 
+- [√] RGB rendering into " "
 # 🧠 TODO 
-- [x] Add JPEG support 
+- [√] Add JPEG support 
 - [x] Test on Windows via winpty 
-- [x] Create README.md 
+- [√] Create README.md 
 - [x] Create logo (ASCII or PNG) 
 # 💡 IDEAS 
 - [x] Add b/w or sepia filter
