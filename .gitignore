@@ -1,0 +1,43 @@
+# Build artifacts
+/build/
+/pit
+/pit.exe
+/pit_x86
+/pit_arm
+/pit_sim
+/pit.app/
+/release/
+
+# Operating System specific files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Doxygen generated documentation
+/docs/html/
+/docs/latex/
+
+# Package manager files
+*.deb
+*.rpm
+*.snap
+*.flatpak
+
+# Crash logs
+*.log
+*.dmp
+
+# Temporary files
+*~
+#*#
+.#*
+*.bak
+*.tmp
+
