@@ -96,6 +96,14 @@ For advanced builds:
 # Build a static executable (useful for distribution without dependencies)
 ./build.sh build x86_64 # (then choose 'y' for static build)
 ```
+Contributing
+Contributions are welcome! Please follow these steps:
+ * Fork the repository
+ * Create a feature branch (git checkout -b feature/your-feature)
+ * Commit your changes (git commit -am 'Add some feature')
+ * Push to the branch (git push origin feature/your-feature)
+ * Open a pull request
+
 📦 Portable: Single binary (around 250KB for ARM64)
 
 ⚡ Fast: Renders efficiently on various systems
