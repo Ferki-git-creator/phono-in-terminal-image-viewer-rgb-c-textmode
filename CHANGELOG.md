@@ -2,6 +2,12 @@ CHANGELOG
 All notable changes to the pit project will be documented in this file.
 The format is based on Keep a Changelog,
 and this project adheres to Semantic Versioning.
+[0.1.11] - 2025-07-17
+Fixed
+ * pit.c, pit_gif.c: Addressed color distortion (images appearing too dark or "washed out") by implementing a simple gamma correction. Images loaded from common formats (like PNG, JPEG) are typically in the sRGB color space. When these sRGB values are directly rendered to a terminal that expects linear light values (or applies its own gamma), the image can appear visually incorrect. A gamma correction (approximating sRGB to linear conversion) is now applied to each color component (R, G, B) before sending it to the terminal, ensuring more accurate and vibrant color reproduction.
+[0.1.10] - 2025-07-17
+Fixed
+ * build.sh: Resolved persistent undefined symbol: main linker errors, particularly observed on x86_64 systems using ld.lld (LLVM linker) in conjunction with GCC. This issue was likely caused by conflicts or unexpected behavior when Link-Time Optimization (-flto) was enabled. The -flto flag has been removed from the default Release build flags to ensure greater compatibility and stability across various toolchain configurations. The -O3 optimization level remains, providing strong performance without LTO-related linking complexities.
 [0.1.9] - 2025-07-17
 Fixed
  * pit.c: Added __attribute__((used)) to the free_image_cache function definition to prevent the linker from optimizing it out, resolving the "undefined symbol" error. This ensures the cleanup function is always included in the final binary.
@@ -73,4 +79,3 @@ Added
  * Initial Aspect Ratio Assumption: Set the TERMINAL_CHAR_HEIGHT_TO_WIDTH_RATIO to 1.0f as a default assumption for terminal character cell proportions during initial display calculations. This value was later refined based on user feedback.
  * Basic Build Script (build.sh): Developed a foundational shell script to automate the compilation process. This script handles compiler detection (preferring gcc, clang), automatically downloads the stb_image.h header file if it's not present, and manages the creation of build directories.
  * Internal Logging System: Introduced simple LOG_INFO, LOG_WARNING, and LOG_ERROR macros for internal debugging, progress reporting, and providing informative feedback to the user during program execution.
- 
