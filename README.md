@@ -17,7 +17,7 @@ Installation
 
 ```bash
 # Clone repository
-git clone [https://github.com/Ferki-git-creator/phono-in-terminal-image-viewer-rgb-c-textmode](https://github.com/Ferki-git-creator/phono-in-terminal-image-viewer-rgb-c-textmode)
+git clone https://github.com/Ferki-git-creator/phono-in-terminal-image-viewer-rgb-c-textmode
 cd pit
 ```
 # Build the executable
@@ -113,4 +113,6 @@ Connection
 
 
 If you have any questions, you can contact me: denisdola278@gmail.com .
+
+If you want to support, just put a star on the repository.😀
 
