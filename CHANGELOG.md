@@ -1,0 +1,76 @@
+CHANGELOG
+All notable changes to the pit project will be documented in this file.
+The format is based on Keep a Changelog,
+and this project adheres to Semantic Versioning.
+[0.1.9] - 2025-07-17
+Fixed
+ * pit.c: Added __attribute__((used)) to the free_image_cache function definition to prevent the linker from optimizing it out, resolving the "undefined symbol" error. This ensures the cleanup function is always included in the final binary.
+ * pit.c: Suppressed "unused variable" warnings for s_image_cache and s_cache_size by explicitly casting them to void at the beginning of main. This maintains the placeholder structure for future image caching functionality without generating compiler warnings.
+ * pit_gif.c: Removed the unused free_image_cache, get_cached_image, and add_to_cache function definitions and their prototypes. These functions were remnants from pit.c and were not applicable or correctly implemented for the pit_gif (single-frame animation) use case, causing compilation issues due to references to non-existent global variables. This simplifies pit_gif.c and resolves its compilation errors.
+[0.1.8] - 2025-07-17
+Fixed
+ * pit.c, pit_gif.c: Corrected a compilation error "use of undeclared identifier 'display_width'/'display_height'" in the main function. This was caused by erroneous lines that attempted to assign values to parameters of the calculate_display_dimensions function as if they were local variables in main. The final_display_width and final_display_height variables already held the correct calculated values, making the problematic lines redundant and syntactically incorrect. These lines have been removed.
+[0.1.7] - 2025-07-17
+Fixed
+ * pit.c: Resolved critical terminal state corruption issues reported by users (e.g., "two newlines for each typed character", "broken command line"). This was caused by pit performing unnecessary terminal manipulations (like screen clearing and cursor visibility control) that conflicted with complex shell environments (e.g., zsh with powerlevel10k).
+   * Removed printf("\033[H\033[J"); (clear screen and move cursor to home) from render_image.
+   * Removed all enable_raw_mode, disable_raw_mode functions and their related global variables (s_original_termios, s_original_windows_mode), as pit is a non-interactive viewer and does not require raw terminal mode.
+   * Removed atexit(disable_raw_mode); and signal(SIGINT, handle_signal);, signal(SIGTERM, handle_signal); calls from main, as there is no terminal state to restore or specific signals to handle beyond default system behavior.
+   * Simplified the handle_signal function (which is now effectively removed due to no signal calls) to avoid any terminal output or manipulation.
+ * pit.c: Ensured _POSIX_C_SOURCE 200809L is defined at the top of the file to guarantee proper declarations for POSIX functions like popen and pclose, resolving "implicit declaration" warnings during compilation on some systems (e.g., WSL).
+[0.1.6] - 2025-07-08
+Fixed
+ * pit.c: Disabled the rendering progress bar (show_progress = 0;) within the render_image function. This was a crucial fix because the progress updates, which were printed to stderr using carriage returns (\r) for in-place updates, were causing visual corruption and "breaking" the image output as it rendered to stdout. This issue was particularly noticeable in terminal emulators like Termux, where the interaction between stdout and stderr streams, combined with carriage returns, led to overlapping or fragmented display. By explicitly setting show_progress = 0;, the progress bar is now entirely suppressed, ensuring a clean and uninterrupted image display.
+[0.1.5] - 2025-07-08
+Changed
+ * pit.c: Critically adjusted the TERMINAL_CHAR_HEIGHT_TO_WIDTH_RATIO preprocessor macro from its initial value of 1.0f to 1.5f. This change directly addresses the observed image aspect ratio distortion in Termux, where square images (like the Tux penguin) appeared horizontally squashed or vertically stretched. The new ratio of 1.5f accurately reflects that the terminal's character cells are approximately 1.5 times taller than they are wide. This adjustment allows pit to correctly calculate the display dimensions, ensuring images are rendered with their true proportions, significantly improving visual fidelity.
+ * pit.c: Removed the explicit STBI_NO_PSD, STBI_NO_GIF, STBI_NO_PIC, and STBI_NO_PNM defines from the stb_image.h inclusion section. By default, stb_image is a highly versatile library, and these defines were unnecessarily restricting its capabilities. This modification now enables pit to support a broader range of image formats out-of-the-box, including Photoshop Document (PSD), Graphics Interchange Format (GIF), Softimage PIC (PIC), and Portable Anymap (PNM), enhancing the utility's overall compatibility and usefulness without requiring additional external libraries.
+[0.1.4] - 2025-07-08
+Fixed
+ * build.sh: Corrected a critical syntax error (} instead of fi) that was present within the armv7l architecture case block in the build function. This subtle but impactful error caused the build.sh script to fail execution with a "syntax error near unexpected token }'" message, preventing successful compilation. The correction ensures the shell script parses and executes correctly.
+Changed
+ * build.sh: Modified the post-compilation step in the build function. The compiled executable (pit) is now intentionally kept within the build/ directory (build/pit) instead of being moved to the project's root directory. This change promotes a more organized and standard project structure, where all generated build artifacts reside in a dedicated build/ folder, separating source code from compiled binaries.
+ * build.sh: Updated the clean function to align with the new executable location. Now, when clean is executed, it primarily removes the entire build/ directory, which implicitly handles the removal of the pit executable. The redundant explicit rm "${BIN_NAME}" command for the root directory was removed, simplifying the cleanup logic.
+ * build.sh: Revised the success messages displayed after a successful compilation. The messages now clearly instruct the user on how to run the executable from its new location (./build/pit <image-file>), providing accurate guidance and improving the user's initial experience with the compiled utility.
+[0.1.3] - 2025-07-08
+Fixed
+ * pit.c: Resolved the undefined symbol: disable_raw_mode linker error. This error occurred because the disable_raw_mode function, which is registered with atexit() for terminal cleanup upon program exit, was being optimized out by the linker because it wasn't directly called in the main execution path. Adding __attribute__((used)) to its definition explicitly informs the linker that this function is indeed used (even if its address is only taken for atexit()) and must be included in the final executable, ensuring proper terminal state restoration.
+[0.1.2] - 2025-07-08
+Added
+ * build.sh: Implemented robust command-line argument parsing for -h and --help flags. When either of these arguments is provided, the script now displays a comprehensive and user-friendly usage guide for build.sh and then exits gracefully. This significantly improves the script's usability and discoverability of its various commands and options.
+ * build.sh: Enhanced the interactivity of read -p prompts for build type (Debug/Release), sanitizer options, and static build preference by incorporating default values directly into the prompt. This allows users to simply press Enter to accept the most common or recommended choice, streamlining the build configuration process and reducing manual input.
+ * build.sh: Introduced a powerful logging mechanism that redirects all stdout and stderr output to a designated log file (build.log) using the tee command. This means that all build messages, warnings, and errors are simultaneously displayed in the terminal and persistently saved to build.log, which is invaluable for debugging, auditing build processes, and reviewing historical build information.
+ * build.sh: Added an explicit informational message at the very beginning of the script's execution to clearly notify the user that all subsequent build output is being redirected and saved to the build.log file. This transparency ensures users are aware of the logging functionality.
+ * build.sh: Extended the clean function to include the removal of the newly introduced build.log file. This ensures that a clean operation performs a complete cleanup of all generated artifacts, including the build log, maintaining a tidy project directory.
+[0.1.1] - 2025-07-08
+Fixed
+ * pit.c: Resolved the undefined symbol: handle_signal linker error. This issue arose because the handle_signal function, which is set up as a signal handler (e.g., for SIGINT), was being optimized out by the linker. Since its address is taken by signal() but not directly called, the linker might incorrectly perceive it as unused. Adding __attribute__((used)) to its definition explicitly tells the linker that this function is indeed required and must be included in the final binary, ensuring proper signal handling and graceful program termination.
+ * pit.c: Addressed multiple "variable used uninitialized" warnings related to unsigned char *current_img_data. This variable is now explicitly initialized to NULL at its declaration. This ensures that current_img_data always has a defined value, preventing potential undefined behavior and crashes, especially in error-handling paths that use goto cleanup_and_exit before the variable might otherwise be assigned.
+ * pit.c: Suppressed "unused parameter" warnings for width and height in the get_cached_image function. Since the caching mechanism is currently a placeholder and these parameters are not actively used within the function, casting them to void ((void)width; (void)height;) eliminates the compiler warnings, contributing to a cleaner build output without altering functionality.
+ * pit.c: Removed non-standard and compiler-ignored __attribute__((optimize("O3"))) and __attribute__((hot})) attributes from the render_image and main functions. These GCC-specific attributes were not being recognized or applied by the target compiler in the Termux environment, leading to "unknown attribute ignored" warnings. Their removal cleans up the build output without impacting performance, as the global -O3 flag in build.sh already handles optimization.
+Changed
+ * build.sh: Modified the build logic to conditionally disable Link-Time Optimization (-flto) when any sanitizers (e.g., -fsanitize=address, -fsanitize=undefined) are enabled. This change is crucial because LTO can sometimes conflict with sanitizer instrumentation, leading to unexpected behavior or build failures. By disabling LTO in debug builds with sanitizers, we ensure greater stability and reliability for debugging purposes.
+ * build.sh: Enhanced compiler optimizations for AArch64 (ARM64) release builds. Added specific architecture-tuned flags suchs as -march=armv8-a+simd+crc+crypto (to enable ARMv8 features like SIMD, CRC, and Crypto extensions), -mtune=cortex-a73 (for performance tuning on Cortex-A73 cores), -fomit-frame-pointer (to reduce overhead), and -flax-vector-conversions (for more flexible vectorization). These flags aim to generate more efficient and performant code tailored for ARM64-based devices.
+ * build.sh: Incorporated a -DTERMUX_ENV preprocessor define when the build script detects that it's running within a Termux environment (based on OSTYPE). This allows pit.c to include Termux-specific code paths, workarounds, or optimizations if necessary, providing platform-aware compilation.
+[0.1.0] - 2025-07-07
+Added
+ * Initial Project Setup: Established the foundational directory and file structure for the pit project, including the primary C source file (pit.c) and the essential build automation script (build.sh).
+ * Image Loading Functionality: Integrated the stb_image single-file public domain library, enabling pit to load various common image formats such as JPEG and PNG into raw pixel data.
+ * Bilinear Image Resizing: Implemented a bilinear interpolation algorithm for high-quality image resizing. This ensures that images can be scaled smoothly to fit different terminal dimensions while minimizing pixelation and visual artifacts.
+ * Terminal Rendering Engine: Developed a core rendering loop that processes image pixel data and outputs it to the terminal using ANSI escape codes. The engine supports full 24-bit true colors for rich visual output and includes automatic fallbacks to 256-color and 16-color modes based on the detected capabilities of the user's terminal, ensuring broad compatibility.
+ * Basic Command-Line Argument Parsing: Introduced initial command-line argument parsing to allow users to control image display and manipulation:
+   * --width <columns> / -w <columns>: To explicitly set the desired output width in terminal columns.
+   * --height <rows> / -H <rows>: To explicitly set the desired output height in terminal rows.
+   * --zoom <factor>: To apply a zoom level to the image (e.g., 2.0 for zoom-in, 0.5 for zoom-out).
+   * --offset-x <pixels>: For horizontal panning (offset) within the original image in pixels.
+   * --offset-y <pixels>: For vertical panning (offset) within the original image in pixels.
+   * --flip-h: To horizontally flip the displayed image.
+   * --flip-v: To vertically flip the displayed image.
+   * --rotate <degrees>: To rotate the image clockwise by 90, 180, or 270 degrees.
+   * --bg <color>: To specify a background color (e.g., 'black', 'white') for transparent PNG images, ensuring proper alpha blending.
+ * Signal Handling for Graceful Exit: Implemented basic signal handlers (e.g., for SIGINT / Ctrl+C, SIGTERM) to ensure that the program can terminate gracefully, releasing allocated resources and restoring terminal settings even if interrupted unexpectedly.
+ * Automatic Terminal Size Detection: Incorporated logic to automatically detect the current terminal's width and height using system calls (like ioctl on Unix-like systems or GetConsoleScreenBufferInfo on Windows) and environment variables. This allows pit to adapt image display to the available screen real estate without manual configuration.
+ * Initial Aspect Ratio Assumption: Set the TERMINAL_CHAR_HEIGHT_TO_WIDTH_RATIO to 1.0f as a default assumption for terminal character cell proportions during initial display calculations. This value was later refined based on user feedback.
+ * Basic Build Script (build.sh): Developed a foundational shell script to automate the compilation process. This script handles compiler detection (preferring gcc, clang), automatically downloads the stb_image.h header file if it's not present, and manages the creation of build directories.
+ * Internal Logging System: Introduced simple LOG_INFO, LOG_WARNING, and LOG_ERROR macros for internal debugging, progress reporting, and providing informative feedback to the user during program execution.
+ 
