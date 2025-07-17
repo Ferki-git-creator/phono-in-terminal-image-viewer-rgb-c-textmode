@@ -144,5 +144,4 @@ I would be happy for a coffee if you enjoy my work!
 
 If you have any questions, you can contact me: denisdola278@gmail.com .
 
-If you want to support, just put a star on the repository.😀
-
+Also, you can star my repository, this will also be a support.🌟
