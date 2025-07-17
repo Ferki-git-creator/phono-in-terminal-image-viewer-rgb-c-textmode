@@ -1,5 +1,11 @@
 # PIT - Phono in Terminal
 
+<p align="center">
+  <img src="logo/pit_logo.png" alt="Project Logo" width="250"/>
+</p>
+
+---
+
 PIT (Phono in Terminal) is a lightweight, platform-independent image viewer for terminal environments. It renders PNG and JPEG images using ANSI escape codes, working in any environment from modern terminals to legacy systems.
 
 ```bash
@@ -14,6 +20,23 @@ Features
  * Cross-platform support for Linux, macOS, Windows, and embedded systems.
  * Supports multiple architectures: x86, ARM, RISC-V, PowerPC, MIPS.
 Installation
+
+
+### 🖼️ Demo
+
+<p align="center">
+  <img src="https://github.com/Ferki-git-creator/phono-in-terminal-image-viewer-rgb-c-textmode/blob/main/demo/new(best)/test.png?raw=true" alt="Demo Image" width="400"/>
+  <br/>
+  <img src="https://github.com/Ferki-git-creator/phono-in-terminal-image-viewer-rgb-c-textmode/blob/main/demo/new(best)/linux_tux.png?raw=true" alt="Linux Tux Demo" width="400"/>
+</p>
+
+---
+
+### 🎥 Video Preview
+
+📺 [Watch on YouTube](https://youtube.com/shorts/TcBFNJcPX-U?si=BA3sVxqZCKaehBu2)
+
+# Install
 
 ```bash
 # Clone repository
