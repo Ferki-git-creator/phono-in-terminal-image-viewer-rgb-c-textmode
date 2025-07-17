@@ -1,10 +1,24 @@
-CHANGELOG
+# CHANGELOG.md
+
 All notable changes to the pit project will be documented in this file.
 The format is based on Keep a Changelog,
 and this project adheres to Semantic Versioning.
+[0.1.13] - 2025-07-17
+Reverted
+ * Color Rendering Logic: Reverted the color processing in render_image (in both pit.c and pit_gif.c) to its state prior to the introduction of explicit gamma correction. This change addresses user feedback regarding desaturated and incorrect colors, aiming to restore the previously "good" color reproduction. The powf calls and related gamma fmax/fmin clamping have been removed.
+ * Command-Line Option --true-color: The --true-color (-T) command-line option and its parsing logic have been removed. This decision was made based on user feedback indicating that it did not resolve the color issues and simplified the argument parsing.
+Maintained Fixes
+ * Terminal State Stability: Crucially, the fixes for the "broken command line" issue (introduced in v0.1.7 by removing enable_raw_mode, disable_raw_mode, and handle_signal functions and their calls) remain in place. This ensures the terminal's functionality is not corrupted after pit exits.
+ * Rendering Artifacts: The removal of printf("\033[H\033[J"); (clear screen escape code) from the beginning of render_image (also from v0.1.7) is maintained. This prevents visual corruption and "breaking" of the image output during rendering, which was a separate issue from the terminal state corruption after exit.
+[0.1.12] - 2025-07-17
+Added
+ * Command-Line Option for True Color: Introduced a new command-line option --true-color (or short -T) to explicitly force pit to use 24-bit true color mode. This allowed users to override automatic color detection if it incorrectly identified the terminal's capabilities, ensuring full color fidelity.
+Fixed
+ * Color Saturation and Palette Issues: Refined the gamma correction logic within render_image for both pit.c and pit_gif.c. The output color values were clamped to the 0-255 range after gamma correction using fmax(0, fmin(255, ...)). This prevented potential color clipping or incorrect values that could lead to desaturated or "washed out" appearance, especially in highlights or shadows. This ensured that the sRGB to linear conversion was applied robustly, improving overall color accuracy and vibrancy.
+ * Pixelation (Partial Addressing): While full pixelation removal for high-resolution images in character-based terminals is inherently limited, the improved gamma correction and the new --true-color option contributed to a visually "sharper" and more detailed appearance by ensuring that the available color space was utilized correctly. The core issue of mapping many image pixels to fewer terminal characters remains a fundamental constraint of ASCII/ANSI art.
 [0.1.11] - 2025-07-17
 Fixed
- * pit.c, pit_gif.c: Addressed color distortion (images appearing too dark or "washed out") by implementing a simple gamma correction. Images loaded from common formats (like PNG, JPEG) are typically in the sRGB color space. When these sRGB values are directly rendered to a terminal that expects linear light values (or applies its own gamma), the image can appear visually incorrect. A gamma correction (approximating sRGB to linear conversion) is now applied to each color component (R, G, B) before sending it to the terminal, ensuring more accurate and vibrant color reproduction.
+ * Color Distortion (Initial Gamma Correction): Addressed initial color distortion (images appearing too dark or "washed out") by implementing a basic gamma correction. Images loaded from common formats (like PNG, JPEG) are typically in the sRGB color space. When these sRGB values are directly rendered to a terminal that expects linear light values (or applies its own gamma), the image can appear visually incorrect. A gamma correction (approximating sRGB to linear conversion) was applied to each color component (R, G, B) before sending it to the terminal, aiming for more accurate color reproduction.
 [0.1.10] - 2025-07-17
 Fixed
  * build.sh: Resolved persistent undefined symbol: main linker errors, particularly observed on x86_64 systems using ld.lld (LLVM linker) in conjunction with GCC. This issue was likely caused by conflicts or unexpected behavior when Link-Time Optimization (-flto) was enabled. The -flto flag has been removed from the default Release build flags to ensure greater compatibility and stability across various toolchain configurations. The -O3 optimization level remains, providing strong performance without LTO-related linking complexities.
