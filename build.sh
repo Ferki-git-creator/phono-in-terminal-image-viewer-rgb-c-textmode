@@ -49,12 +49,6 @@ print_help() {
     echo ""
     echo "Options:"
     echo "  -h, --help            Show this help message and exit."
-    echo ""
-    echo "Examples:"
-    echo "  ./build.sh build                # Build for host architecture (will prompt for target)"
-    echo "  ./build.sh build aarch64        # Build for ARM64 (will prompt for target)"
-    echo "  ./build.sh clean                # Clean build files"
-    echo "  ./build.sh cross arm-linux-gnueabihf-gcc armv7l # Cross-compile for ARMv7"
 }
 
 # --- Handle help command early ---
@@ -274,7 +268,6 @@ build() {
         fi
     fi # End of CI/interactive build type selection
 
-    log_info "Compiling ${SRC_FILE} for ${TARGET_ARCH} using ${COMPILER}..."
     log_info "Initial compiler flags: ${CFLAGS}"
 
     # Special handling for different architectures or cross-compilation
@@ -402,11 +395,23 @@ build() {
     log_info "Final compiler flags: ${CFLAGS}"
     log_info "Final linker flags: ${LDFLAGS}"
 
-    # Compile the source file
-    "${COMPILER}" ${CFLAGS} ${TARGET_SPEC} "${SRC_FILE}" -o "${BUILD_DIR}/${BIN_NAME}" ${LDFLAGS}
+    # --- Two-step build process: Compile to .o, then link .o to executable ---
+
+    # Step 1: Compile source file to object file
+    log_info "Compiling ${SRC_FILE} to object file: ${BUILD_DIR}/${BIN_NAME}.o"
+    "${COMPILER}" ${CFLAGS} ${TARGET_SPEC} -c "${SRC_FILE}" -o "${BUILD_DIR}/${BIN_NAME}.o"
+
+    if [ $? -ne 0 ]; then
+        log_error "Compilation to object file failed!"
+        exit 1
+    fi
+
+    # Step 2: Link object file to create the executable
+    log_info "Linking object file ${BUILD_DIR}/${BIN_NAME}.o to create executable: ${BUILD_DIR}/${BIN_NAME}"
+    "${COMPILER}" "${BUILD_DIR}/${BIN_NAME}.o" -o "${BUILD_DIR}/${BIN_NAME}" ${LDFLAGS}
 
     if [ $? -eq 0 ]; then
-        log_success "Compilation successful!"
+        log_success "Compilation and Linking successful!"
         log_info "Executable created at: ${BUILD_DIR}/${BIN_NAME}"
         log_info "To run: ./${BUILD_DIR}/${BIN_NAME} <image-file>"
         log_info "Example: ./${BUILD_DIR}/${BIN_NAME} assets/test.jpg"
