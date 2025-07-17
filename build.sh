@@ -4,8 +4,8 @@
 COMPILER_PREFERENCE=("gcc" "clang" "tcc") # Preferred compilers in order
 DEFAULT_COMPILER="gcc" # Fallback if none in preference are found
 BUILD_DIR="build"
-BIN_NAME="pit"
-SRC_FILE="pit.c"
+BIN_NAME="" # Will be set based on user choice
+SRC_FILE="" # Will be set based on user choice
 STB_IMAGE_H="stb_image.h"
 STB_IMAGE_URL="https://raw.githubusercontent.com/nothings/stb/master/stb_image.h"
 LOG_FILE="build.log" # Define log file name
@@ -40,10 +40,10 @@ print_help() {
     echo "Usage: ./build.sh [COMMAND] [OPTIONS]"
     echo ""
     echo "Commands:"
-    echo "  build [architecture]  Builds the 'pit' executable."
+    echo "  build [architecture]  Builds the specified 'pit' or 'pit_gif' executable."
     echo "                        <architecture> can be 'x86_64', 'aarch64', 'armv7l', 'riscv64', 'ppc64le', 'mips', 'i386'."
     echo "                        If no architecture is specified, it detects the host architecture."
-    echo "  clean                 Removes the build directory and the executable."
+    echo "  clean                 Removes the build directory and executables."
     echo "  cross <compiler> <architecture>"
     echo "                        Performs cross-compilation. E.g., 'cross aarch64-linux-gnu-gcc aarch64'."
     echo ""
@@ -51,26 +51,40 @@ print_help() {
     echo "  -h, --help            Show this help message and exit."
     echo ""
     echo "Examples:"
-    echo "  ./build.sh build                # Build for host architecture (default)"
-    echo "  ./build.sh build aarch64        # Build for ARM64"
+    echo "  ./build.sh build                # Build for host architecture (will prompt for target)"
+    echo "  ./build.sh build aarch64        # Build for ARM64 (will prompt for target)"
     echo "  ./build.sh clean                # Clean build files"
     echo "  ./build.sh cross arm-linux-gnueabihf-gcc armv7l # Cross-compile for ARMv7"
 }
-
-# --- Redirect all output to a log file and stdout ---
-# This must be at the very top to capture all output.
-# Requires bash 4+ and tee.
-if command -v tee &> /dev/null; then
-    exec > >(tee "${LOG_FILE}") 2>&1
-    log_info "All build output redirected to ${LOG_FILE}"
-else
-    log_warning "tee command not found. Output will not be logged to ${LOG_FILE}."
-fi
 
 # --- Handle help command early ---
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
   print_help
   exit 0
+fi
+
+# --- Log Output Choice ---
+LOG_OUTPUT_CHOICE=""
+while [[ "$LOG_OUTPUT_CHOICE" != "f" && "$LOG_OUTPUT_CHOICE" != "t" ]]; do
+    read -p "$(echo -e "${BLUE}Where to output build log? (f=file, t=terminal, default: f): ${NC}")" LOG_OUTPUT_INPUT
+    LOG_OUTPUT_CHOICE=${LOG_OUTPUT_INPUT:-f} # Default to file
+    LOG_OUTPUT_CHOICE=$(echo "$LOG_OUTPUT_CHOICE" | tr '[:upper:]' '[:lower:]')
+    if [[ "$LOG_OUTPUT_CHOICE" != "f" && "$LOG_OUTPUT_CHOICE" != "t" ]]; then
+        log_warning "Invalid choice. Please enter 'f' or 't'."
+    fi
+done
+
+# --- Redirect all output based on user choice ---
+if [ "$LOG_OUTPUT_CHOICE" == "f" ]; then
+    if command -v tee &> /dev/null; then
+        exec > >(tee "${LOG_FILE}") 2>&1
+        log_info "All build output redirected to ${LOG_FILE}"
+    else
+        log_warning "tee command not found. Output will not be logged to ${LOG_FILE}."
+    fi
+else # LOG_OUTPUT_CHOICE == "t"
+    log_info "Build output will be shown in terminal only."
+    # No redirection needed, it's already stdout/stderr
 fi
 
 
@@ -123,15 +137,13 @@ download_stb_image_h() {
 
 # --- Clean Function ---
 clean() {
-    log_info "Cleaning build directory and executable..."
+    log_info "Cleaning build directory and executables..."
     if [ -d "${BUILD_DIR}" ]; then
         rm -rf "${BUILD_DIR}"
         if [ $? -ne 0 ]; then
             log_warning "Failed to remove build directory: ${BUILD_DIR}"
         fi
     fi
-    # Removed: if [ -f "${BIN_NAME}" ]; then rm "${BIN_NAME}"; fi
-    # The executable will now be inside BUILD_DIR, so removing BUILD_DIR handles it.
     
     if [ -f "${LOG_FILE}" ]; then # Also clean the log file
         rm "${LOG_FILE}"
@@ -139,8 +151,17 @@ clean() {
             log_warning "Failed to remove log file: ${LOG_FILE}"
         fi
     fi
-    # Updated check to reflect executable is inside BUILD_DIR
-    if [ ! -d "${BUILD_DIR}" ] && [ ! -f "${LOG_FILE}" ]; then
+    # Check for both pit and pit_gif executables in the current directory if they were moved there
+    if [ -f "pit" ]; then
+        rm "pit"
+        log_info "Removed old 'pit' executable from root."
+    fi
+    if [ -f "pit_gif" ]; then
+        rm "pit_gif"
+        log_info "Removed old 'pit_gif' executable from root."
+    fi
+
+    if [ ! -d "${BUILD_DIR}" ] && [ ! -f "${LOG_FILE}" ] && [ ! -f "pit" ] && [ ! -f "pit_gif" ]; then
         log_success "Clean complete."
     else
         log_warning "Clean finished, but some files/directories might remain due to permissions or other issues."
@@ -160,6 +181,28 @@ build() {
         log_error "Failed to create build directory: ${BUILD_DIR}"
         exit 1
     fi
+
+    # --- Build Target Choice ---
+    BUILD_TARGET_CHOICE=""
+    while [[ "$BUILD_TARGET_CHOICE" != "p" && "$BUILD_TARGET_CHOICE" != "g" ]]; do
+        read -p "$(echo -e "${BLUE}Which executable to build? (p=pit, g=pit_gif, default: p): ${NC}")" BUILD_TARGET_INPUT
+        BUILD_TARGET_CHOICE=${BUILD_TARGET_INPUT:-p} # Default to pit
+        BUILD_TARGET_CHOICE=$(echo "$BUILD_TARGET_CHOICE" | tr '[:upper:]' '[:lower:]')
+        if [[ "$BUILD_TARGET_CHOICE" != "p" && "$BUILD_TARGET_CHOICE" != "g" ]]; then
+            log_warning "Invalid choice. Please enter 'p' or 'g'."
+        fi
+    done
+
+    if [ "$BUILD_TARGET_CHOICE" == "p" ]; then
+        SRC_FILE="./pit.c"
+        BIN_NAME="pit"
+        log_info "Building 'pit' (static image viewer)."
+    else # BUILD_TARGET_CHOICE == "g"
+        SRC_FILE="./pit_gif.c"
+        BIN_NAME="pit_gif"
+        log_info "Building 'pit_gif' (GIF 'animation' viewer)."
+    fi
+
 
     # Determine target architecture
     local TARGET_ARCH
@@ -365,7 +408,6 @@ build() {
     if [ $? -eq 0 ]; then
         log_success "Compilation successful!"
         log_info "Executable created at: ${BUILD_DIR}/${BIN_NAME}"
-        # Removed the 'mv' command: mv "${BUILD_DIR}/${BIN_NAME}" .
         log_info "To run: ./${BUILD_DIR}/${BIN_NAME} <image-file>"
         log_info "Example: ./${BUILD_DIR}/${BIN_NAME} assets/test.jpg"
     else
