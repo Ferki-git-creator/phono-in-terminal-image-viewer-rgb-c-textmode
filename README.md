@@ -134,6 +134,13 @@ Contributions are welcome! Please follow these steps:
 🌍 Universal: Runs on any architecture with a C compiler
 Connection
 
+## ☕ Support
+
+I would be happy for a coffee if you enjoy my work!
+
+<a href="https://ko-fi.com/ferki" target="_blank">
+  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Buy Me a Coffee at ko-fi.com" />
+</a>
 
 If you have any questions, you can contact me: denisdola278@gmail.com .
 
