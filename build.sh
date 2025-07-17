@@ -91,6 +91,7 @@ detect_compiler() {
             log_success "Using compiler: ${COMPILER}"
             return 0
         fi
+    C_COMPILER_FOUND=0
     done
     COMPILER="${DEFAULT_COMPILER}" # Fallback
     log_warning "None of the preferred compilers (${COMPILER_PREFERENCE[*]}) found. Falling back to default: ${COMPILER}"
@@ -247,14 +248,13 @@ build() {
                 CFLAGS+=" ${SANITIZER_FLAGS}"
                 LDFLAGS+=" ${SANITIZER_FLAGS}" # Sanitizers also need to be linked
                 log_info "Sanitizers enabled: ${SANITIZER_FLAGS}"
-                CFLAGS=$(echo "$CFLAGS" | sed 's/-flto//g') # Remove -flto if sanitizers are enabled
-                log_info "Disabled -flto due to sanitizers."
+                # Removed -flto if sanitizers are enabled - now -flto is not added by default for release
             fi
 
         else
             BUILD_TYPE="Release"
-            CFLAGS+=" -O3 -flto" # Optimization level 3 and Link-Time Optimization for release
-            log_info "Building in Release mode."
+            CFLAGS+=" -O3" # Optimization level 3 (removed -flto)
+            log_info "Building in Release mode (without LTO). If you need LTO, add -flto manually."
         fi
 
         # Ask for static build interactively with default
@@ -355,6 +355,7 @@ build() {
                     log_info "Using PowerPC64 LE cross-compiler: ${COMPILER}"
                 else
                     log_warning "No specific PowerPC64 LE cross-compiler. Attempting to use host compiler."
+                F_COMPILER_FOUND=0
                 fi
             fi
             ;;
